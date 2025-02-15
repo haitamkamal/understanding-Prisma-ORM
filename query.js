@@ -2,31 +2,43 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-async function GetAllUser() {
-  const allUser = await prisma.user.findMany({
-    where:{
-      or:[
-        {title:{contains :'JavaScript'}},
-        {content:{contains:'Backend development'}},
-      ],
+async function main(params) {
+  const user = await prisma.user.create({
+    data:{
+      email:'tahiri@gmail.com',
+      name:'tahiri',
+      posts:{
+        create:[
+        {
+          title:'my first day at shcool',
+          categories:{
+            create:{
+              name:'Office',
+            },
+          },
+        },
+        {
+          title:'How to connect to postgres sql database',
+          categories:{
+              create:[{name:'database'},{name:'tuto'}],
+          },
+        },
+       ],
+      },
     },
-    include: { posts: true },
   })
-}
-async function CreateUser() {
-    const user = await prisma.user.create({
-      data:{
-        name:'alex',
-        email:'alex@gmail.com',
-        posts:{
-          create:{title:'Exploring Prisma ORM in Modern Applications'}
-        }
-      }
-    })
-}
-async function updateUser() {
-  const post = await prisma.post.update({
-    where:{id:50},
-    data:{published:true}
+  const returnUser = await prisma.user.findMany({
+    where :{
+      id : user.id,
+    },
+    include:{
+      posts:{
+        include:{
+          categories:true,
+        },
+      },
+    },
   })
+  console.log(returnUser)
 }
+main()
