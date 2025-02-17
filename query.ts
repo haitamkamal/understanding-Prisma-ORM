@@ -1,69 +1,74 @@
 import { PrismaClient, Prisma } from '@prisma/client'
+import { getUsersWithPosts } from '@prisma/client/sql'
+import { getUsersByAge } from '@prisma/client/sql'
+import { getUsersByIds } from '@prisma/client/sql'
 
-// Initialize the PrismaClient
-const prisma = new PrismaClient()
-
-// Async function to execute the database operations
 async function main() {
-  
-  // Flag to conditionally decide whether to include posts when creating a user
   let includePosts: boolean = false
-  let userData: Prisma.UserCreateInput  // Declare variable to hold user data
+  let userData: Prisma.UserCreateInput
+  const prisma = new PrismaClient()
 
-  // Check if posts should be included in the user creation
   if (includePosts) {
-    // If includePosts is true, create a user with posts
     userData = {
-      email: 'moad@gmail.com',  // Email of the new user
-      name: 'moad',             // Name of the new user
+      email: 'moad@gmail.com',
+      name: 'moad',
+      age : 15,
       posts: {
-        create: {               // Create a post as part of the user
-          title: 'Include this post!',  // Title of the post
+        create: {
+          title: 'Include this post!',
         },
       },
     }
   } else {
-    // If includePosts is false, just create the user without posts
     userData = {
-      email: 'moad@gmail.com',  // Email of the new user
-      name: 'moad',             // Name of the new user
+      email: 'moad@gmail.com',
+      name: 'moad',
+      age: 15
     }
   }
 
-  // Create the user and log the result
   const createdUser = await prisma.user.create({ data: userData })
   console.log('User Created:', createdUser)
 
-  // Fetch all users and log the result
   const allUsers = await prisma.user.findMany()
   console.log('All Users:', allUsers)
 
-  // Update an existing user (using email as the identifier) and log the updated user
   const updateUser = await prisma.user.update({
     where: {
-      email: 'viola@gmail.com',  // Email of the user to update
+      email: 'viola@gmail.com',
     },
     data: {
-      name: 'Viola the Magnificent',  // New name for the user
+      name: 'Viola the Magnificent',
+      age: 15
     },
   })
   console.log(updateUser)
 
-  // Upsert operation: if a user exists with the given email, update it; otherwise, create a new user
   const upsertUser = await prisma.user.upsert({
     where: {
-      email: 'viola@prisma.io',  // Email to search for the user
+      email: 'viola@prisma.io',
     },
     update: {
-      name: 'Viola the Magnificent',  // New name if user exists
+      name: 'Viola the Magnificent',
     },
     create: {
-      email: 'viola@prisma.io',  // Email for the new user
-      name: 'Viola the Magnificent',  // Name for the new user
+      email: 'viola@prisma.io',
+      name: 'Viola the Magnificent',
+      age : 15
     },
   })
-  console.log(upsertUser)  // Log the result of the upsert operation
+  console.log(upsertUser)
+
+  const usersWithPostCounts = await prisma.$queryRawTyped(getUsersWithPosts())
+  console.log(usersWithPostCounts)
+
+  const minAge =  18
+  const maxAge =  30
+  const users = await prisma.$queryRawTyped(getUsersByAge(minAge, maxAge))
+console.log(users)
+const userIds = [1, 2, 3]
+const user = await prisma.$queryRawTyped(getUsersByIds(userIds))
+console.log(user)
 }
 
-// Call the main function to execute the above operations
 main()
